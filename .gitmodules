@@ -1,0 +1,3 @@
+[submodule "submodules/hoge-extension"]
+	path = submodules/hoge-extension
+	url = https://github.com/echzny/get-from-hoge-scheme-extension.git
