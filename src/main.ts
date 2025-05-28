@@ -1,6 +1,6 @@
-import { app, BrowserWindow, protocol, ipcMain, net, session } from 'electron';
+import { app, BaseWindow, BrowserWindow, protocol, WebContentsView } from 'electron';
 import path from 'node:path';
-import started from 'electron-squirrel-startup';
+import * as crypto from "node:crypto";
 
 // Register the 'hoge' scheme as privileged
 protocol.registerSchemesAsPrivileged([
@@ -14,84 +14,66 @@ protocol.registerSchemesAsPrivileged([
     }
   }
 ]);
+app.setAsDefaultProtocolClient("hoge");
 
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (started) {
-  app.quit();
-}
+// hoge schema handler
+const hogeHandler = (request: GlobalRequest): GlobalResponse => {
+  const url = new URL(request.url);
+  if (url.host === 'fuga') {
+    return new Response(JSON.stringify({ message: 'piyo' }), {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+  } else {
+    return new Response('Not Found', { status: 404 });
+  }
+};
 
 const createWindow = async () => {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  const mainWindow = new BaseWindow({
     width: 800,
-    height: 600,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
-    },
+    height: 600
   });
 
-  await mainWindow.webContents.session.extensions.loadExtension(path.join(__dirname, '../../submodules/hoge-extension/.output/chrome-mv3'));
+  const leftView = new WebContentsView({
+    webPreferences: {
+      partition: `persist:${crypto.randomUUID()}`
+    }
+  });
+  leftView.setBounds({ x: 0, y: 0, width: 400, height: 600 });
+  leftView.webContents.session.protocol.handle('hoge', hogeHandler);
+  // Does not work global 'session.protocol.handle()' when enable 'partition' option.
+  // Needs to set handler each webContents.
+  mainWindow.getContentView().addChildView(leftView);
+
+  const rightView = new WebContentsView({
+    webPreferences: {
+      partition: `persist:${crypto.randomUUID()}`
+    }
+  });
+  rightView.setBounds({ x: 400, y: 0, width: 400, height: 600 });
+  rightView.webContents.session.protocol.handle('hoge', hogeHandler);
+  mainWindow.getContentView().addChildView(rightView);
+
+  await leftView.webContents.session.extensions.loadExtension(path.join(__dirname, '../../submodules/hoge-extension/.output/chrome-mv3'));
+  await rightView.webContents.session.extensions.loadExtension(path.join(__dirname, '../../submodules/hoge-extension/.output/chrome-mv3'));
   // and load the index.html of the app.
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+  /*if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
   } else {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
-  }
+  }*/
+  leftView.webContents.loadURL("https://google.com")
+  rightView.webContents.loadURL("https://mail.google.com")
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools({ mode: 'detach' });
+  leftView.webContents.openDevTools({ mode: 'detach' });
+  rightView.webContents.openDevTools({ mode: 'detach' });
 };
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.on('ready', () => {
-  // Register the custom protocol handler for "hoge" schema
-  protocol.handle('hoge', (request) => {
-    const url = new URL(request.url);
-    if (url.host === 'fuga') {
-      return new Response(JSON.stringify({ message: 'piyo' }), {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-    } else {
-      return new Response('Not Found', { status: 404 });
-    }
-  });
-
-  // Handle IPC request to test the hoge protocol
-  ipcMain.handle('test-hoge-protocol', async () => {
-    return new Promise((resolve, reject) => {
-      const request = net.request('hoge://fuga');
-
-      let responseData = '';
-
-      request.on('response', (response) => {
-        response.on('data', (chunk) => {
-          responseData += chunk.toString();
-        });
-
-        response.on('end', () => {
-          try {
-            const jsonData = JSON.parse(responseData);
-            resolve(jsonData);
-          } catch (error) {
-            reject(new Error('Failed to parse JSON response'));
-          }
-        });
-      });
-
-      request.on('error', (error) => {
-        reject(error);
-      });
-
-      request.end();
-    });
-  });
-
   createWindow();
 });
 

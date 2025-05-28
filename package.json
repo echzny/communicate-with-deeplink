@@ -5,11 +5,7 @@
   "description": "My Electron application description",
   "main": ".vite/build/main.js",
   "scripts": {
-    "start": "npm run build -w submodules/hoge-extension & electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
-    "publish": "electron-forge publish",
-    "lint": "eslint --ext .ts,.tsx ."
+    "start": "npm run build -w submodules/hoge-extension & electron-forge start"
   },
   "keywords": [],
   "author": {
@@ -36,8 +32,7 @@
     "typescript": "~4.5.4",
     "vite": "^5.4.19"
   },
-  "dependencies": {
-    "electron-squirrel-startup": "^1.0.1"
-  },
-  "workspaces": ["submodules/hoge-extension"]
+  "workspaces": [
+    "submodules/hoge-extension"
+  ]
 }
