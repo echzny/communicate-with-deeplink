@@ -1,6 +1,6 @@
 # communicate-with-deeplink
 
-> Learning] Communicate between electron and chrome extension with deeplink
+> [Learning] Communicate between electron and chrome extension with deeplink
 
 When startup, access to Electron's custom scheme "hoge://fuga" from Chrome Extension.
 And response to Chrome Extension from Electron.
