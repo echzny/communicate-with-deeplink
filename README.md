@@ -13,8 +13,16 @@ And response to Chrome Extension from Electron.
 ## Usage
 
 ```shell
+$ git clone ...
+
+$ git submodule update --init --recursive
+
 $ npm install
-...
+
+$ npm install -w submodules/hoge-extension
+
+$ npm run build -w submodules/hoge-extension
+
 $ npm run start
 
 -> see DevTools console.
