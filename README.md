@@ -30,7 +30,7 @@ $ npm run start
 
 ## Note
 
-Does not works global 'session.protocol.handle()' when enable 'partition' option.
+Does not works global 'protocol.handle()' when enable 'partition' option.
 In this case needs to set handler each webContents.
 
 ```
@@ -45,6 +45,6 @@ const view = new WebContentsView({
     partition: `persist:${crypto.randomUUID()}`
   }
 });
-session.protocol.handle('hoge', hogeHandler);  <- Does not works
+protocol.handle('hoge', hogeHandler);  <- Does not works
 view.webContents.session.protocol.handle('hoge', hogeHandler);  <- It works
 ```
